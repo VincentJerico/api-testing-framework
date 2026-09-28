@@ -1,0 +1,43 @@
+{
+  "name": "api-testing-framework",
+  "version": "1.0.0",
+  "description": "A reusable, typed API test framework: API clients, Zod schema/contract validation, auth fixtures, data factories, and automatic cleanup — on Playwright's request API.",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:contract": "playwright test --grep @contract",
+    "test:negative": "playwright test --grep @negative",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [
+    "api-testing",
+    "playwright",
+    "typescript",
+    "zod",
+    "contract-testing",
+    "sdet",
+    "qa"
+  ],
+  "author": "Vincent Jerico",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@faker-js/faker": "^10.6.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1",
+    "zod": "^4.6.5"
+  }
+}
