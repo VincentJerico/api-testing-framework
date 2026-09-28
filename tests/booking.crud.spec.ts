@@ -19,15 +19,19 @@ test.describe('Booking CRUD', () => {
     const res = await bookingClient.update(bookingid, replacement);
     expect(res.status()).toBe(200);
     expect(await res.json()).toEqual(replacement);
+    expect(await (await bookingClient.get(bookingid)).json()).toEqual(replacement);
   });
 
   test('PATCH changes only the given fields', async ({ bookingClient }) => {
     const original = buildBooking();
     const { bookingid } = await (await bookingClient.create(original)).json();
 
+    const patched = { ...original, firstname: 'Patched' };
+
     const res = await bookingClient.patch(bookingid, { firstname: 'Patched' });
     expect(res.status()).toBe(200);
-    expect(await res.json()).toEqual({ ...original, firstname: 'Patched' });
+    expect(await res.json()).toEqual(patched);
+    expect(await (await bookingClient.get(bookingid)).json()).toEqual(patched);
   });
 
   test('DELETE removes the booking', async ({ bookingClient }) => {
