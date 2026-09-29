@@ -100,9 +100,10 @@ The tests pin the demo API's **actual** behavior and flag where a well-behaved A
 
 ## CI
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs **lint · format · typecheck**, then the API
-suite — on every push/PR, plus a **weekly scheduled run** against the live API to catch contract drift
-even when the code hasn't changed.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs **lint · format · typecheck** first and
+starts the API suite only if they pass, so a broken build never hits the live API. It runs on every
+push/PR, plus a **weekly scheduled run** against the live API to catch contract drift even when the
+code hasn't changed.
 
 ## Design note
 
