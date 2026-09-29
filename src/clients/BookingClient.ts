@@ -67,8 +67,10 @@ export class BookingClient extends BaseClient {
       const res = await this.request
         .delete(`/booking/${id}`, { headers: this.authHeaders(true) })
         .catch(() => undefined);
-      // 404 means the booking is already gone, which is the state cleanup wants.
-      if (!res?.ok() && res?.status() !== 404) leaked.push(id);
+      if (res?.ok()) continue;
+      // DELETE on a booking that is already gone returns 405 here, not 404, so ask GET instead.
+      const check = await this.request.get(`/booking/${id}`).catch(() => undefined);
+      if (check?.status() !== 404) leaked.push(id);
     }
     this.created.clear();
     if (leaked.length > 0) {
