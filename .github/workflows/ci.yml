@@ -26,6 +26,7 @@ jobs:
 
   api-tests:
     name: API tests
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
