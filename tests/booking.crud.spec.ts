@@ -1,4 +1,5 @@
 import { test, expect } from '../src/fixtures/api.js';
+import { BookingClient } from '../src/clients/BookingClient.js';
 import { buildBooking } from '../src/data/bookingFactory.js';
 
 test.describe('Booking CRUD', () => {
@@ -19,15 +20,19 @@ test.describe('Booking CRUD', () => {
     const res = await bookingClient.update(bookingid, replacement);
     expect(res.status()).toBe(200);
     expect(await res.json()).toEqual(replacement);
+    expect(await (await bookingClient.get(bookingid)).json()).toEqual(replacement);
   });
 
   test('PATCH changes only the given fields', async ({ bookingClient }) => {
     const original = buildBooking();
     const { bookingid } = await (await bookingClient.create(original)).json();
 
+    const patched = { ...original, firstname: 'Patched' };
+
     const res = await bookingClient.patch(bookingid, { firstname: 'Patched' });
     expect(res.status()).toBe(200);
-    expect(await res.json()).toEqual({ ...original, firstname: 'Patched' });
+    expect(await res.json()).toEqual(patched);
+    expect(await (await bookingClient.get(bookingid)).json()).toEqual(patched);
   });
 
   test('DELETE removes the booking', async ({ bookingClient }) => {
@@ -36,5 +41,17 @@ test.describe('Booking CRUD', () => {
     // Documented quirk: successful DELETE returns 201, not 200/204.
     expect((await bookingClient.delete(bookingid)).status()).toBe(201);
     expect((await bookingClient.get(bookingid)).status()).toBe(404);
+  });
+
+  test('cleanup tolerates a booking that is already gone', async ({
+    request,
+    token,
+    bookingClient,
+  }) => {
+    const { bookingid } = await (await bookingClient.create(buildBooking())).json();
+    // Delete it behind this client's back, the way the demo API's periodic reset does.
+    expect((await new BookingClient(request, token).delete(bookingid)).ok()).toBe(true);
+
+    await expect(bookingClient.cleanup()).resolves.toBeUndefined();
   });
 });

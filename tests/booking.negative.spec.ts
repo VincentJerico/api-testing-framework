@@ -26,16 +26,28 @@ test.describe('Booking negative & access control @negative', () => {
     expect((await bookingClient.get(bookingid)).status()).toBe(200);
   });
 
-  test('an invalid token is rejected', async ({ request, bookingClient }) => {
-    const { bookingid } = await (await bookingClient.create(buildBooking())).json();
+  test('an invalid token is rejected and changes nothing', async ({ request, bookingClient }) => {
+    const original = buildBooking();
+    const { bookingid } = await (await bookingClient.create(original)).json();
     const intruder = new BookingClient(request, 'not-a-real-token');
 
-    expect((await intruder.update(bookingid, buildBooking())).status()).toBe(403);
+    const res = await intruder.update(bookingid, buildBooking({ firstname: 'Hijack' }));
+    expect(res.status()).toBe(403);
+    expect(await (await bookingClient.get(bookingid)).json()).toEqual(original);
   });
 
-  test('a malformed create is rejected', async ({ bookingClient }) => {
-    const res = await bookingClient.create({ firstname: 'OnlyName' });
-    // Documented quirk: the API returns 500 here; a well-behaved API would return 400.
-    expect(res.status()).toBeGreaterThanOrEqual(400);
+  test('a malformed create is rejected and stores nothing', async ({ bookingClient }) => {
+    test.info().annotations.push({
+      type: 'issue',
+      description: 'Malformed POST /booking returns 500; a well-behaved API would return 400.',
+    });
+    const firstname = `Malformed-${crypto.randomUUID()}`;
+
+    expect((await bookingClient.create({ firstname })).status()).toBe(500);
+
+    // A valid booking under the same name proves the firstname filter finds matches, so the
+    // exact list below shows the malformed body was not stored.
+    const { bookingid } = await (await bookingClient.create(buildBooking({ firstname }))).json();
+    expect(await (await bookingClient.list({ firstname })).json()).toEqual([{ bookingid }]);
   });
 });

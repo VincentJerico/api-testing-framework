@@ -25,8 +25,8 @@ export class BookingClient extends BaseClient {
     return auth && this.token ? { Cookie: `token=${this.token}` } : {};
   }
 
-  list(): Promise<APIResponse> {
-    return this.request.get('/booking');
+  list(filter?: { firstname?: string }): Promise<APIResponse> {
+    return this.request.get('/booking', { params: filter });
   }
 
   get(id: number): Promise<APIResponse> {
@@ -60,13 +60,21 @@ export class BookingClient extends BaseClient {
     return res;
   }
 
-  /** Best-effort removal of everything this client created — keeps the shared API tidy. */
+  /** Removes everything this client created; throws if any booking is left on the shared API. */
   async cleanup(): Promise<void> {
+    const leaked: number[] = [];
     for (const id of this.created) {
-      await this.request
+      const res = await this.request
         .delete(`/booking/${id}`, { headers: this.authHeaders(true) })
         .catch(() => undefined);
+      if (res?.ok()) continue;
+      // DELETE on a booking that is already gone returns 405 here, not 404, so ask GET instead.
+      const check = await this.request.get(`/booking/${id}`).catch(() => undefined);
+      if (check?.status() !== 404) leaked.push(id);
     }
     this.created.clear();
+    if (leaked.length > 0) {
+      throw new Error(`cleanup could not delete bookings: ${leaked.join(', ')}`);
+    }
   }
 }

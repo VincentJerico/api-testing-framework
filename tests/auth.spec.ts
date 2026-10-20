@@ -22,6 +22,8 @@ test.describe('Auth', () => {
 
   test('missing credentials do not return a token @negative', async ({ authClient }) => {
     const res = await authClient.createToken({});
+    expect(res.status()).toBe(200);
+    await expect(res).toMatchSchema(AuthFailureSchema);
     expect(await res.json()).not.toHaveProperty('token');
   });
 });

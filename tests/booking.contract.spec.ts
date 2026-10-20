@@ -7,10 +7,12 @@ import {
 import { buildBooking } from '../src/data/bookingFactory.js';
 
 test.describe('Booking contract @contract', () => {
-  test('GET /booking returns a list of booking ids', async ({ bookingClient }) => {
+  test('GET /booking lists the id of a booking just created', async ({ bookingClient }) => {
+    const { bookingid } = await (await bookingClient.create(buildBooking())).json();
     const res = await bookingClient.list();
     expect(res.status()).toBe(200);
     await expect(res).toMatchSchema(BookingIdListSchema);
+    expect(await res.json()).toContainEqual({ bookingid });
   });
 
   test('POST /booking returns the created-booking envelope', async ({ bookingClient }) => {
