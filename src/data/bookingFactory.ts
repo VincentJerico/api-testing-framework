@@ -9,7 +9,8 @@ const isoDate = (d: Date) => d.toISOString().slice(0, 10);
  */
 export function buildBooking(overrides: Partial<Booking> = {}): Booking {
   const checkin = faker.date.soon({ days: 30 });
-  const checkout = faker.date.soon({ days: 10, refDate: checkin });
+  const checkout = new Date(checkin);
+  checkout.setUTCDate(checkin.getUTCDate() + faker.number.int({ min: 1, max: 10 }));
   return {
     firstname: faker.person.firstName(),
     lastname: faker.person.lastName(),
