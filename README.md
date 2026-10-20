@@ -6,25 +6,25 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Zod](https://img.shields.io/badge/Zod-3E67B1?logo=zod&logoColor=white)
 
-A **reusable, typed API test framework** built on Playwright's `request` API. It's the layer I'd put
-between a test suite and a REST API: typed clients, **schema/contract validation with Zod**, auth
-handled by fixtures, realistic test data, and **automatic cleanup** so tests never leak data.
+A reusable, typed API test framework built on Playwright's `request` API. It's the layer I'd put
+between a test suite and a REST API. It has typed clients, contract checks with Zod schemas, auth
+handled by fixtures, realistic test data, and cleanup that fails the test if anything is left behind.
 
-> Demo target: the public [Restful-Booker](https://restful-booker.herokuapp.com) API. Point it at your
-> own API via `BASE_URL` and by adding clients + schemas.
+> The demo target is the public [Restful-Booker](https://restful-booker.herokuapp.com) API. To test
+> your own API, set `BASE_URL` and add clients and schemas.
 
-## Why it's structured this way
+## How it's organized
 
-| Pattern                  | Where                            | Why                                                                        |
-| ------------------------ | -------------------------------- | -------------------------------------------------------------------------- |
-| **Typed API clients**    | `src/clients/`                   | Endpoints live in one place; tests read like behavior, not URLs            |
-| **Schemas as contracts** | `src/schemas/`                   | Zod validates responses _and_ the TS types are inferred from it — no drift |
-| **Custom matcher**       | `src/matchers/schema.ts`         | `await expect(res).toMatchSchema(Schema)` with readable field-level errors |
-| **Auth fixture**         | `src/fixtures/api.ts`            | Token fetched **once per worker**, injected automatically                  |
-| **Auto cleanup**         | `BookingClient.cleanup()`        | Every booking a test creates is deleted afterwards                         |
-| **Data factories**       | `src/data/bookingFactory.ts`     | Faker data with valid, ordered dates; override any field                   |
-| **Tags**                 | `@smoke` `@contract` `@negative` | Run focused subsets                                                        |
-| **Quality gates**        | ESLint · Prettier · `tsc` · CI   | Lint, format, and typecheck all gate the build                             |
+| Pattern              | Where                            | Why                                                                        |
+| -------------------- | -------------------------------- | -------------------------------------------------------------------------- |
+| Typed API clients    | `src/clients/`                   | Endpoints live in one place; tests read like behavior, not URLs            |
+| Schemas as contracts | `src/schemas/`                   | Zod checks responses, and the TS types come from the same schema           |
+| Custom matcher       | `src/matchers/schema.ts`         | `await expect(res).toMatchSchema(Schema)` with readable field-level errors |
+| Auth fixture         | `src/fixtures/api.ts`            | The token is fetched once per worker and passed in for you                 |
+| Auto cleanup         | `BookingClient.cleanup()`        | Every booking a test creates is deleted, and a leftover fails the test     |
+| Data factories       | `src/data/bookingFactory.ts`     | Faker data with valid, ordered dates; override any field                   |
+| Tags                 | `@smoke` `@contract` `@negative` | Run focused subsets                                                        |
+| Quality gates        | ESLint, Prettier, `tsc`, CI      | Lint, format, and typecheck all gate the build                             |
 
 ## What a contract failure looks like
 
@@ -109,4 +109,4 @@ code hasn't changed.
 
 `toMatchSchema` takes the `APIResponse` rather than the parsed body on purpose: Playwright drops custom
 matchers from the typings when the received value is `any`, and `res.json()` returns `any`. Passing the
-typed response keeps assertions type-safe — the `typecheck` gate caught this during development.
+typed response keeps assertions type-safe. The `typecheck` gate caught this during development.
