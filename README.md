@@ -1,10 +1,17 @@
-# API Testing Framework
+<h1>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.svg" />
+  <img alt="API Testing Framework: Typed API tests on Playwright's request API, with Zod contracts" src=".github/assets/banner-light.svg" width="100%" />
+</picture>
+</h1>
 
 [![CI](https://github.com/VincentJerico/api-testing-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/VincentJerico/api-testing-framework/actions/workflows/ci.yml)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Zod](https://img.shields.io/badge/Zod-3E67B1?logo=zod&logoColor=white)
+
+<sub>QA portfolio: [01 journey](https://github.com/VincentJerico/qa-engineering-journey) · [02 framework](https://github.com/VincentJerico/playwright-framework-template) · **03 api** · [04 taskflow](https://github.com/VincentJerico/taskflow-under-test) · [05 accessibility](https://github.com/VincentJerico/accessibility-testing) · [06 security](https://github.com/VincentJerico/security-testing) · [07 performance](https://github.com/VincentJerico/performance-testing) · [profile](https://github.com/VincentJerico)</sub>
 
 A reusable, typed API test framework built on Playwright's `request` API. It's the layer I'd put
 between a test suite and a REST API. It has typed clients, contract checks with Zod schemas, auth
