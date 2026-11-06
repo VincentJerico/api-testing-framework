@@ -1,5 +1,6 @@
 import { expect as baseExpect, type APIResponse } from '@playwright/test';
 import type { z } from 'zod';
+import { formatIssues } from '../http/readJson.js';
 
 function isAPIResponse(value: unknown): value is APIResponse {
   return (
@@ -31,13 +32,10 @@ export const expect = baseExpect.extend({
         message: () => 'expected value NOT to match the schema, but it did',
       };
     }
-    const issues = result.error.issues
-      .map((issue) => `  • ${issue.path.map(String).join('.') || '(root)'}: ${issue.message}`)
-      .join('\n');
     return {
       pass: false,
       name: 'toMatchSchema',
-      message: () => `schema validation failed:\n${issues}`,
+      message: () => `schema validation failed:\n${formatIssues(result.error.issues)}`,
     };
   },
 });
