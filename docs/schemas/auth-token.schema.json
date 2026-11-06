@@ -1,0 +1,13 @@
+{
+  "title": "auth-token",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": ["token"],
+  "additionalProperties": false
+}
