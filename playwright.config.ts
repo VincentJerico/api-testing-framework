@@ -20,4 +20,11 @@ export default defineConfig({
     baseURL: config.baseURL,
     extraHTTPHeaders: DEFAULT_HEADERS,
   },
+
+  projects: [
+    // Offline: proves the framework's own gates can fail. Needs no API, so CI runs it first.
+    { name: 'selftest', testDir: './tests/selftest' },
+    // The API suite, against BASE_URL.
+    { name: 'api', testIgnore: 'selftest/**' },
+  ],
 });
