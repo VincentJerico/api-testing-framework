@@ -5,14 +5,18 @@ import {
   CreatedBookingSchema,
 } from '../src/schemas/booking.schema.js';
 import { buildBooking } from '../src/data/bookingFactory.js';
+import { readJson } from '../src/http/readJson.js';
 
 test.describe('Booking contract @contract', () => {
   test('GET /booking lists the id of a booking just created', async ({ bookingClient }) => {
-    const { bookingid } = await (await bookingClient.create(buildBooking())).json();
+    const { bookingid } = await readJson(
+      await bookingClient.create(buildBooking()),
+      CreatedBookingSchema,
+    );
     const res = await bookingClient.list();
     expect(res.status()).toBe(200);
     await expect(res).toMatchSchema(BookingIdListSchema);
-    expect(await res.json()).toContainEqual({ bookingid });
+    expect(await readJson(res, BookingIdListSchema)).toContainEqual({ bookingid });
   });
 
   test('POST /booking returns the created-booking envelope', async ({ bookingClient }) => {
@@ -22,7 +26,10 @@ test.describe('Booking contract @contract', () => {
   });
 
   test('GET /booking/:id returns a booking matching the schema', async ({ bookingClient }) => {
-    const { bookingid } = await (await bookingClient.create(buildBooking())).json();
+    const { bookingid } = await readJson(
+      await bookingClient.create(buildBooking()),
+      CreatedBookingSchema,
+    );
     const res = await bookingClient.get(bookingid);
     expect(res.status()).toBe(200);
     await expect(res).toMatchSchema(BookingSchema);

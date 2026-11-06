@@ -8,10 +8,15 @@ on:
   schedule:
     - cron: '0 6 * * 1' # weekly run against the live API to catch contract drift
   workflow_dispatch:
+    inputs:
+      live:
+        description: 'Also run the suite against the live public API'
+        type: boolean
+        default: false
 
 jobs:
   quality:
-    name: Lint · format · typecheck
+    name: Lint · format · typecheck · self-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -23,10 +28,49 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
+      # Offline: proves the matcher, readJson, cleanup, log redaction and published schemas can fail.
+      - run: npm run test:self
 
-  api-tests:
-    name: API tests
+  api-local:
+    name: API tests (local Restful-Booker)
     needs: quality
+    runs-on: ubuntu-latest
+    # Hermetic: every push and PR runs against the same image, so a red build means our change,
+    # not a cold start or a reset on the shared public demo.
+    services:
+      restful-booker:
+        image: mwinteringham/restfulbooker:latest
+        ports:
+          - 3001:3001
+    env:
+      BASE_URL: http://localhost:3001
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Wait for Restful-Booker
+        run: |
+          for i in $(seq 1 30); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/ping")" = 201 ] && exit 0
+            sleep 2
+          done
+          echo "Restful-Booker did not answer /ping within 60s" >&2
+          exit 1
+      - run: npm run test:api # request API only, no browser install needed
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-local
+          path: playwright-report/
+          retention-days: 14
+
+  api-live:
+    name: API tests (live public API)
+    needs: quality
+    if: ${{ github.event_name == 'schedule' || inputs.live }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -35,10 +79,36 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright test # request API only — no browser install needed
+      - run: npm run test:api
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-live
           path: playwright-report/
           retention-days: 14
+
+  drift-alert:
+    name: Open or update the contract drift issue
+    needs: api-live
+    # Only the unattended weekly run raises an issue; a manual run reports in the Actions tab.
+    if: ${{ failure() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Open the issue, or comment on the open one
+        run: |
+          title="Contract drift: weekly run against the live API failed"
+          existing=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          body="The weekly run against the live Restful-Booker API failed: $RUN_URL
+
+          The HTML report (playwright-report-live) has an api-calls.json attachment on every failed test with each request and response."
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
